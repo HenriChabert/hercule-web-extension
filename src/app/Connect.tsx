@@ -10,7 +10,6 @@ import useConnectStatus from "./hooks/use-connect-status";
 const DEFAULT_SERVER_URL = "http://localhost:8000";
 const DEFAULT_SECRET_KEY = "my_secret_key";
 
-
 function Connect() {
   const [serverUrl, setServerUrl] = useState(DEFAULT_SERVER_URL);
   const [secretKey, setSecretKey] = useState(DEFAULT_SECRET_KEY);
@@ -87,15 +86,7 @@ function Connect() {
   }, [connectStatus]);
 
   return (
-    <Flex
-      direction="column"
-      height="600px"
-      width="400px"
-      px="8"
-      py="4"
-      align="center"
-      className="!justify-around"
-    >
+    <Flex direction="column" height="600px" width="400px" px="8" py="4" align="center" className="!justify-around">
       <Text>Login to Hercule Server</Text>
       <Flex direction="column" width="100%" gap="2">
         <Flex direction="column" width="100%">

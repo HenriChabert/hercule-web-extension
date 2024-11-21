@@ -4,8 +4,6 @@ import { useEffect } from "react";
 import useConnectStatus from "./hooks/use-connect-status";
 import Footer from "@/app/components/Footer";
 import TriggersList from "./components/TriggersList";
-import * as ToastPrimitive from "@radix-ui/react-toast";
-import Toast from "./components/toaster/Toast";
 
 function Home() {
   const navigate = useNavigate();

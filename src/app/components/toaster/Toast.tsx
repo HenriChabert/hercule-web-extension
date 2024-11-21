@@ -1,5 +1,4 @@
 import * as ToastPrimitive from "@radix-ui/react-toast";
-import { useState } from "react";
 
 interface ToastProps extends ToastPrimitive.ToastProps {
   title?: string;

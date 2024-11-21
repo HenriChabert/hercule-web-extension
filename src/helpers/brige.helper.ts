@@ -1,0 +1,1 @@
+// This file is used to create bridges between elements of web extension.

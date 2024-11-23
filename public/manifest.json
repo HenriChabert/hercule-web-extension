@@ -13,5 +13,5 @@
     "host_permissions": ["https://*/*", "http://*/*"],
     "optional_permissions": ["webRequest"],
     "optional_host_permissions": ["<all_urls>"],
-    "permissions": ["storage", "tabs"]
+    "permissions": ["storage", "tabs", "notifications"]
   }

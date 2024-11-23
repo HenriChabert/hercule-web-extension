@@ -1,10 +1,7 @@
 import { Trigger } from "@/types/messages.type";
 import { useEffect, useState } from "react";
 import browser from "webextension-polyfill";
-import {
-  ListTriggersMessage,
-  ListTriggersMessageResponse,
-} from "@/types/messages.type";
+import { ListTriggersMessage, ListTriggersMessageResponse } from "@/types/messages.type";
 import TriggerItem from "./TriggerItem";
 import { Flex, ScrollArea, Text, Separator } from "@radix-ui/themes";
 
@@ -20,10 +17,7 @@ function TriggersList() {
       if (response.success) {
         setTriggers(response.payload.triggers);
       } else {
-        console.log(
-          "Failed to fetch triggers. Original error: " +
-            JSON.stringify(response.payload.message)
-        );
+        console.log("Failed to fetch triggers. Original error: " + JSON.stringify(response.payload.message));
       }
     } catch (error) {
       console.error("Error logging in:", error);
@@ -35,7 +29,7 @@ function TriggersList() {
   }, []);
 
   return (
-    <Flex direction="column" align="center">
+    <Flex direction="column" align="center" width="100%">
       <Text size="6">My triggers</Text>
       <Separator my="3" size="4" />
       <ScrollArea>

@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { HealthResponse, Trigger } from "./hercule-api.types";
+import { HealthResponse, Trigger, TriggerEventResponseItem } from "./hercule-api.types";
+import { TriggerEventContext } from "@/types/events.type";
+import { camelCaseToSnakeCase } from "@/helpers/utils.helper";
 
 export class HerculeApi {
   public serverUrl: string | null = null;
@@ -9,6 +11,17 @@ export class HerculeApi {
 
   constructor() {
     this.client = axios.create();
+  }
+
+  preparePayload(payload: Record<string, unknown>): Record<string, unknown> {
+    return Object.fromEntries(
+      Object.entries(payload).map(([key, value]) => [
+        camelCaseToSnakeCase(key),
+        value && typeof value === "object" && !Array.isArray(value)
+          ? this.preparePayload(value as Record<string, unknown>)
+          : value,
+      ])
+    );
   }
 
   validateServerUrl(serverUrl: string): boolean {
@@ -75,18 +88,43 @@ export class HerculeApi {
     return false;
   }
 
-  async listTriggers(): Promise<Trigger[]> {
-    const response: AxiosResponse<Trigger[]> = await this.client.get("/triggers");
+  async listTriggers({ event }: { event?: "button_clicked" | "page_opened" }): Promise<Trigger[]> {
+    const response: AxiosResponse<Trigger[]> = await this.client.get("/triggers", {
+      params: {
+        event,
+      },
+    });
     return response.data;
   }
 
-  async runTrigger(triggerId: string, context: any): Promise<{ success: boolean; payload: { message: string } }> {
+  async runTrigger(
+    triggerId: string,
+    context: Record<string, unknown>
+  ): Promise<{ success: boolean; payload: { message: string } }> {
     try {
-      const response: AxiosResponse<void> = await this.client.post(`/trigger/${triggerId}/run`, context);
+      await this.client.post(`/trigger/${triggerId}/run`, context);
       return { success: true, payload: { message: "Trigger run successfully" } };
     } catch (error) {
       console.error("Error running trigger:", error);
       return { success: false, payload: { message: "Error running trigger" } };
+    }
+  }
+
+  async triggerEvent({
+    event,
+    context,
+  }: {
+    event: "button_clicked" | "page_opened";
+    context: TriggerEventContext;
+  }): Promise<{ success: boolean; payload?: TriggerEventResponseItem[] }> {
+    const payload = this.preparePayload({ event, context });
+    try {
+      const response: AxiosResponse<TriggerEventResponseItem[]> = await this.client.post(`/triggers/event`, payload);
+      console.log("response", response);
+      return { success: true, payload: response.data };
+    } catch (error) {
+      console.error("Error running trigger:", error);
+      return { success: false };
     }
   }
 }

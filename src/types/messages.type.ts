@@ -1,11 +1,14 @@
+import { TriggerEventResponseItem } from "@/services/hercule-server/hercule-api.types";
+import { TriggerEvent } from "./events.type";
+
 export interface Message {
   type: string;
-  payload: any;
+  payload: Record<string, unknown>;
 }
 
 export interface MessageResponse {
   success: boolean;
-  payload?: any;
+  payload?: Record<string, unknown>;
 }
 
 export interface SuccessMessageResponse extends MessageResponse {
@@ -78,17 +81,30 @@ export interface ListTriggersMessage extends Message {
   };
 }
 
-export interface ListTriggersMessageResponseSuccess
-  extends SuccessMessageResponse {
+export interface ListTriggersMessageResponseSuccess extends SuccessMessageResponse {
   success: true;
   payload: {
     triggers: Trigger[];
   };
 }
 
-export type ListTriggersMessageResponse =
-  | ListTriggersMessageResponseSuccess
-  | ErrorMessageResponse;
+export type ListTriggersMessageResponse = ListTriggersMessageResponseSuccess | ErrorMessageResponse;
+
+// Trigger Event
+
+export interface TriggerEventMessage extends Message {
+  type: "TRIGGER_EVENT";
+  payload: {
+    event: TriggerEvent;
+  };
+}
+
+export interface TriggerEventMessageResponse extends MessageResponse {
+  success: boolean;
+  payload?: {
+    response: TriggerEventResponseItem[] | undefined;
+  };
+}
 
 // Run Trigger
 

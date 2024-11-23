@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import HerculeApi from "../services/hercule-server/hercule-api";
-import { Trigger } from "../services/hercule-server/hercule-api.types";
+import { Trigger, TriggerEventResponseItem } from "../services/hercule-server/hercule-api.types";
 import { StorageHelper } from "../helpers/storage.helper";
 import {
   Message,
@@ -8,15 +8,24 @@ import {
   ErrorMessageResponse,
   ConnectStatusMessageResponse,
   ConnectConfig,
-  RunTriggerMessage,
-  RunTriggerMessageResponse,
+  TriggerEventMessage,
+  TriggerEventMessageResponse,
 } from "../types/messages.type";
 import { ConnectMessage, ConnectMessageResponse } from "../types/messages.type";
 import { DisconnectMessageResponse } from "../types/messages.type";
 import { ListTriggersMessageResponse } from "../types/messages.type";
+import { handleActions } from "../services/actions-handler";
+import { Action } from "@/types/actions.type";
+
 const storageHelper = new StorageHelper({ storageType: "local" });
 
+let cachedHerculeApi: HerculeApi | null = null;
+
 const herculeApiFromStorage = async () => {
+  if (cachedHerculeApi) {
+    return cachedHerculeApi;
+  }
+
   const herculeApi = new HerculeApi();
 
   const serverUrl = await storageHelper.getData<string>("serverUrl");
@@ -24,16 +33,94 @@ const herculeApiFromStorage = async () => {
 
   if (serverUrl && secretKey) {
     try {
-      herculeApi.connect({ serverUrl: serverUrl, secretKey: secretKey });
+      await herculeApi.connect({ serverUrl: serverUrl, secretKey: secretKey });
     } catch (error) {
       console.error("Error initializing Hercule API:", error);
     }
   }
+
+  cachedHerculeApi = herculeApi;
   return herculeApi;
 };
 
+const registerEvents = async () => {
+  browser.runtime.onMessage.addListener(onMessage);
+  browser.tabs.onUpdated.addListener(onTabUpdated);
+};
+
+const findActions = (triggerEventResponse: TriggerEventResponseItem[]): Action[] => {
+  const actions: Action[] = [];
+  for (const triggerEventResponseItem of triggerEventResponse) {
+    const triggerEventActions = triggerEventResponseItem.actions;
+    if (triggerEventActions) {
+      actions.push(...triggerEventActions);
+    }
+  }
+  return actions;
+};
+
+const getCurrentUrl = async (tabId: number): Promise<string> => {
+  const tab = await browser.tabs.get(tabId);
+  return tab.url || "";
+};
+
+const onTabUpdated = async (tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
+  const herculeApi = await herculeApiFromStorage();
+
+  if (changeInfo.status !== "complete") {
+    return;
+  }
+
+  console.log("onTabUpdated", changeInfo);
+  const currentUrl = await getCurrentUrl(tabId);
+
+  const response = await herculeApi.triggerEvent({
+    event: "page_opened",
+    context: { url: currentUrl },
+  });
+
+  if (response.payload) {
+    handleActions(findActions(response.payload));
+  }
+
+  return { success: response.success };
+};
+
+const onTriggerEventMessage = async (message: TriggerEventMessage): Promise<TriggerEventMessageResponse> => {
+  const herculeApi = await herculeApiFromStorage();
+  const event = message.payload.event;
+  const response = await herculeApi.triggerEvent({
+    event: event.id,
+    context: event.context,
+  });
+
+  if (!response.payload) {
+    return { success: response.success };
+  }
+
+  const actions: Action[] = [];
+  for (const triggerEventResponse of response.payload) {
+    const triggerEventActions = triggerEventResponse.actions;
+    if (triggerEventActions) {
+      actions.push(...triggerEventActions);
+    }
+  }
+
+  handleActions(actions);
+
+  return {
+    success: response.success,
+    payload: {
+      response: response.payload,
+    },
+  };
+};
+
+// browser.tabs.onUpdated.addListener(onPageLoad);
+
 const onConnectStatusMessage = async (): Promise<ConnectStatusMessageResponse> => {
   const herculeApi = await herculeApiFromStorage();
+
   const isConnected = await herculeApi.isConnected();
   const connectStatus = isConnected ? "connected" : "disconnected";
   const connectConfig: ConnectConfig = {
@@ -67,9 +154,9 @@ const onConnectMessage = async (message: ConnectMessage): Promise<ConnectMessage
     storageHelper.setData("secretKey", message.payload.secretKey);
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error logging in:", error);
-    return { success: false, payload: { message: error.message } };
+    return { success: false, payload: { message: (error as Error).message } };
   }
 };
 
@@ -89,10 +176,12 @@ const onListTriggersMessage = async (): Promise<ListTriggersMessageResponse> => 
   const herculeApi = await herculeApiFromStorage();
   let triggers: Trigger[];
   try {
-    triggers = await herculeApi.listTriggers();
-  } catch (error: any) {
+    triggers = await herculeApi.listTriggers({
+      event: "button_clicked",
+    });
+  } catch (error: unknown) {
     console.error("Error listing triggers:", error);
-    return { success: false, payload: { message: error.message } };
+    return { success: false, payload: { message: (error as Error).message } };
   }
 
   return {
@@ -110,17 +199,11 @@ const onListTriggersMessage = async (): Promise<ListTriggersMessageResponse> => 
   };
 };
 
-const onRunTriggerMessage = async (message: RunTriggerMessage): Promise<RunTriggerMessageResponse> => {
-  const herculeApi = await herculeApiFromStorage();
-  const response = await herculeApi.runTrigger(message.payload.triggerId, message.payload.context);
-  return response;
-};
-
-const onFallbackMessage = async (message: Message): Promise<ErrorMessageResponse> => {
+const onFallbackMessage = async (): Promise<ErrorMessageResponse> => {
   return { success: false, payload: { message: "Invalid message type" } };
 };
 
-const onMessage = async (message: unknown, sender: browser.Runtime.MessageSender): Promise<MessageResponse> => {
+const onMessage = async (message: unknown): Promise<MessageResponse> => {
   const messageWithType = message as Message;
 
   console.debug("📨 Received message:", messageWithType);
@@ -134,11 +217,11 @@ const onMessage = async (message: unknown, sender: browser.Runtime.MessageSender
       return onConnectStatusMessage();
     case "LIST_TRIGGERS":
       return onListTriggersMessage();
-    case "RUN_TRIGGER":
-      return onRunTriggerMessage(messageWithType as RunTriggerMessage);
+    case "TRIGGER_EVENT":
+      return onTriggerEventMessage(messageWithType as TriggerEventMessage);
     default:
-      return onFallbackMessage(messageWithType);
+      return onFallbackMessage();
   }
 };
 
-browser.runtime.onMessage.addListener(onMessage);
+registerEvents();

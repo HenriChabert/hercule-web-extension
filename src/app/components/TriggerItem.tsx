@@ -1,19 +1,33 @@
 import browser from "webextension-polyfill";
-import { RunTriggerMessageResponse, Trigger } from "@/types/messages.type";
+import { Trigger, TriggerEventMessage, TriggerEventMessageResponse } from "@/types/messages.type";
 import { Flex, Text, Badge, Button } from "@radix-ui/themes";
 import n8nIcon from "@/assets/n8n-icon.png";
+import zapierIcon from "@/assets/zapier-icon.png";
+import makeIcon from "@/assets/make-icon.png";
+
 import { PlayIcon } from "lucide-react";
 import { useState } from "react";
-import { RunTriggerMessage } from "@/types/messages.type";
 import { useToaster } from "@/app/hooks/use-toaster";
 
 interface TriggerItemProps {
   trigger: Trigger;
 }
 
+const icons = {
+  n8n: n8nIcon,
+  zapier: zapierIcon,
+  make: makeIcon,
+} as Record<Trigger["source"], string>;
+
 function TriggerItem({ trigger }: TriggerItemProps) {
   const [loading, setLoading] = useState(false);
   const { showToast } = useToaster();
+
+  const getCurrentUrl = async () => {
+    const query = { active: true, currentWindow: true };
+    const [tab] = await browser.tabs.query(query);
+    return tab.url;
+  };
 
   const onRun = async () => {
     setLoading(true);
@@ -23,12 +37,12 @@ function TriggerItem({ trigger }: TriggerItemProps) {
       variation: "success",
     });
 
-    const currentUrl = window.location.href;
+    const currentUrl = await getCurrentUrl();
 
     const response = (await browser.runtime.sendMessage({
-      type: "RUN_TRIGGER",
-      payload: { triggerId: trigger.id, context: { url: currentUrl } },
-    } as RunTriggerMessage)) as RunTriggerMessageResponse;
+      type: "TRIGGER_EVENT",
+      payload: { event: { id: "button_clicked", context: { triggerId: trigger.id, url: currentUrl } } },
+    } as TriggerEventMessage)) as TriggerEventMessageResponse;
 
     if (response.success) {
       showToast({
@@ -46,9 +60,15 @@ function TriggerItem({ trigger }: TriggerItemProps) {
   };
 
   return (
-    <Flex justify="between" align="center" p="2" className="border border-slate-200 rounded-md hover:bg-slate-200">
+    <Flex
+      justify="between"
+      align="center"
+      p="2"
+      width="100%"
+      className="border border-slate-200 rounded-md hover:bg-slate-200"
+    >
       <Flex gap="2" align="center">
-        <img src={n8nIcon} width={16} height={16} className="h-4 w-4" />
+        <img src={icons[trigger.source as keyof typeof icons]} width={16} height={16} className="h-4 w-4" />
         <Flex direction="column" gap="1">
           <Text size="2">{trigger.name}</Text>
           <Flex gap="1">

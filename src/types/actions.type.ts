@@ -2,9 +2,7 @@ export type ActionType = "show_alert" | "show_console";
 
 export interface ActionBase {
   type: ActionType;
-  params: {
-    message?: string;
-  };
+  params: Record<string, unknown>;
 }
 
 export interface ShowAlertAction extends ActionBase {

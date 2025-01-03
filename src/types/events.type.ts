@@ -1,12 +1,15 @@
 import { Action } from "./actions.type";
 
+export type EventId = "button_clicked" | "page_opened";
+
 export interface TriggerEventContext {
   triggerId?: string;
   url?: string;
+  html_content?: string;
 }
 
 export interface TriggerEvent {
-  id: "button_clicked" | "page_opened";
+  id: EventId;
   context: TriggerEventContext;
 }
 

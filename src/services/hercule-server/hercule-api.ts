@@ -1,7 +1,34 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { HealthResponse, Trigger, TriggerEventResponseItem } from "./hercule-api.types";
+import { HealthResponse, Trigger, TriggerEventResponse, TriggerEventResponseItem } from "./hercule-api.types";
 import { TriggerEventContext } from "@/types/events.type";
 import { camelCaseToSnakeCase } from "@/helpers/utils.helper";
+import { StorageHelper } from "@/helpers/storage.helper";
+import { EventId } from "@/types/events.type";
+
+const storageHelper = new StorageHelper({ storageType: "local" });
+let cachedHerculeApi: HerculeApi | null = null;
+
+export const herculeApiFromStorage = async () => {
+  if (cachedHerculeApi) {
+    return cachedHerculeApi;
+  }
+
+  const herculeApi = new HerculeApi();
+
+  const serverUrl = await storageHelper.getData<string>("serverUrl");
+  const secretKey = await storageHelper.getData<string>("secretKey");
+
+  if (serverUrl && secretKey) {
+    try {
+      await herculeApi.connect({ serverUrl: serverUrl, secretKey: secretKey });
+    } catch (error) {
+      console.error("Error initializing Hercule API:", error);
+    }
+  }
+
+  cachedHerculeApi = herculeApi;
+  return herculeApi;
+};
 
 export class HerculeApi {
   public serverUrl: string | null = null;
@@ -10,7 +37,28 @@ export class HerculeApi {
   private secretKey: string | null = null;
 
   constructor() {
-    this.client = axios.create();
+    this.client = axios.create({
+      baseURL: "",
+    });
+
+    this.client.interceptors.request.use((config) => {
+      console.debug("🚀 Sending request:", {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        data: config.data,
+        headers: config.headers,
+      });
+      return config;
+    });
+
+    this.client.interceptors.response.use((response) => {
+      console.debug("✅ Received response:", {
+        status: response.status,
+        data: response.data,
+        headers: response.headers,
+      });
+      return response;
+    });
   }
 
   preparePayload(payload: Record<string, unknown>): Record<string, unknown> {
@@ -64,6 +112,11 @@ export class HerculeApi {
     }
   }
 
+  async disconnect(): Promise<void> {
+    this.serverUrl = null;
+    this.secretKey = null;
+  }
+
   async getHealthSecured(): Promise<HealthResponse> {
     const response: AxiosResponse<HealthResponse> = await this.client.get("/health-secured");
     return response.data;
@@ -88,7 +141,7 @@ export class HerculeApi {
     return false;
   }
 
-  async listTriggers({ event }: { event?: "button_clicked" | "page_opened" }): Promise<Trigger[]> {
+  async listTriggers({ event }: { event?: EventId }): Promise<Trigger[]> {
     const response: AxiosResponse<Trigger[]> = await this.client.get("/triggers", {
       params: {
         event,
@@ -114,13 +167,12 @@ export class HerculeApi {
     event,
     context,
   }: {
-    event: "button_clicked" | "page_opened";
+    event: EventId;
     context: TriggerEventContext;
-  }): Promise<{ success: boolean; payload?: TriggerEventResponseItem[] }> {
+  }): Promise<TriggerEventResponse> {
     const payload = this.preparePayload({ event, context });
     try {
       const response: AxiosResponse<TriggerEventResponseItem[]> = await this.client.post(`/triggers/event`, payload);
-      console.log("response", response);
       return { success: true, payload: response.data };
     } catch (error) {
       console.error("Error running trigger:", error);

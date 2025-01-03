@@ -11,6 +11,11 @@ export interface Trigger {
   url_regex: string | null;
 }
 
+export interface TriggerEventResponse {
+  success: boolean;
+  payload?: TriggerEventResponseItem[];
+}
+
 export interface TriggerEventResponseItem {
   status: "success" | "error";
   actions?: Action[];

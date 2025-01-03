@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import browser from "webextension-polyfill";
-import {
-  ConnectStatusMessage,
-  ConnectStatusMessageResponse,
-} from "../../types/messages.type";
+import { ConnectStatusMessage, ConnectStatusMessageResponse } from "../../types/messages.type";
 import { ConnectConfig, ConnectStatus } from "../../types/messages.type";
 
 interface ConnectState {

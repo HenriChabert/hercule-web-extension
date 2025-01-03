@@ -14,7 +14,7 @@ function Home() {
     if (connectStatus === "disconnected") {
       return navigate("/connect");
     }
-  }, [connectStatus]);
+  }, [connectStatus, navigate]);
 
   return (
     <Flex direction="column" height="600px" width="400px" px="8" py="4" align="center" className="!justify-around">

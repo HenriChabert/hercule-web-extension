@@ -2,6 +2,7 @@
 declare let self: ServiceWorkerGlobalScope;
 
 import { herculeApiFromStorage } from "./hercule-server/hercule-api";
+import { handleActions } from "@/services/actions.service";
 
 export async function subscribe() {
   const herculeApi = await herculeApiFromStorage();
@@ -33,6 +34,11 @@ function logSubscriptionDataToConsole(subscription: PushSubscription) {
 self.addEventListener("push", function (event) {
   console.log("[Service Worker] Push Received.");
   console.log(`[Service Worker] Push had this data/text: "${event.data?.text()}"`);
+
+  const data = JSON.parse(event.data?.text() || "{}");
+  if (data.actions) {
+    handleActions(data.actions);
+  }
 });
 
 function urlB64ToUint8Array(base64String: string) {

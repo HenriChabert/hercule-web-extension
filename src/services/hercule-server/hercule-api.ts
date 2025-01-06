@@ -172,7 +172,11 @@ export class HerculeApi {
     context: TriggerEventContext;
     webPushSubscription?: PushSubscription;
   }): Promise<TriggerEventResponse> {
-    const payload = this.preparePayload({ event, context, webPushSubscription });
+    const payload = {
+      event,
+      context,
+      web_push_subscription: webPushSubscription?.toJSON(),
+    };
     try {
       const response: AxiosResponse<TriggerEventResponseItem[]> = await this.client.post(`/triggers/event`, payload);
       return { success: true, payload: response.data };

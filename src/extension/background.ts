@@ -14,6 +14,10 @@ import { herculeApiFromStorage } from "@/services/hercule-server/hercule-api";
 import { onConnectStatusMessage, onConnectMessage, onDisconnectMessage } from "@/services/auth.service";
 import { MessageTriggerEventService } from "@/services/trigger-event.service";
 
+self.addEventListener("activate", () => {
+  registerEvents();
+});
+
 const registerEvents = async () => {
   browser.runtime.onMessage.addListener(onMessage);
   triggerEventServices.forEach((service) => service.register());
@@ -85,5 +89,3 @@ const onMessage = async (message: unknown): Promise<MessageResponse> => {
       return onFallbackMessage();
   }
 };
-
-registerEvents();

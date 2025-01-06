@@ -166,11 +166,13 @@ export class HerculeApi {
   async triggerEvent({
     event,
     context,
+    webPushSubscription,
   }: {
     event: EventId;
     context: TriggerEventContext;
+    webPushSubscription?: PushSubscription;
   }): Promise<TriggerEventResponse> {
-    const payload = this.preparePayload({ event, context });
+    const payload = this.preparePayload({ event, context, webPushSubscription });
     try {
       const response: AxiosResponse<TriggerEventResponseItem[]> = await this.client.post(`/triggers/event`, payload);
       return { success: true, payload: response.data };
@@ -178,6 +180,13 @@ export class HerculeApi {
       console.error("Error running trigger:", error);
       return { success: false };
     }
+  }
+
+  async getServerPublicKey(): Promise<string> {
+    const response: AxiosResponse<{
+      public_key: string;
+    }> = await this.client.get("/webpush/public-key");
+    return response.data.public_key;
   }
 }
 

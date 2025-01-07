@@ -3,8 +3,9 @@ import { TriggerEventMessage } from "@/types/messages.type";
 import { herculeApiFromStorage } from "@/services/hercule-server/hercule-api";
 import { contextExtractors } from "@/services/context-extractor.service";
 import { EventId, TriggerEventContext } from "@/types/events.type";
-import { handleActions } from "../services/actions.service";
-import { TriggerEventResponse } from "./hercule-server/hercule-api.types";
+import { handleActions } from "@/services/actions.service";
+import { TriggerEventResponse } from "@/services/hercule-server/hercule-api.types";
+import { subscribe } from "@/services/webpush.service";
 
 abstract class TriggerEventService {
   abstract id: EventId;
@@ -33,7 +34,14 @@ abstract class TriggerEventService {
       context = { ...context, ...extractContext };
     }
 
-    const response = await herculeApi.triggerEvent({ event: this.id, context });
+    const subscription = await subscribe();
+    console.log("🚀 ~ TriggerEventService ~ triggerEvent ~ subscription:", subscription);
+
+    const response = await herculeApi.triggerEvent({
+      event: this.id,
+      context,
+      webPushSubscription: subscription,
+    });
 
     if (response.payload && response.success) {
       response.payload.forEach((item) => {

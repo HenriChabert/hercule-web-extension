@@ -33,6 +33,15 @@ class HTMLContentExtractor implements ContextExtractorService {
   };
 
   async extract(tabId: number, selector: string | null = null): Promise<string> {
+    const urlExtractor = new UrlExtractor();
+    const url = await urlExtractor.extract(tabId);
+
+    console.log({ url });
+
+    if (!url.startsWith("http") && !url.startsWith("https")) {
+      return "";
+    }
+
     const result = await browser.scripting.executeScript({
       target: { tabId: tabId },
       func: this.domToString,

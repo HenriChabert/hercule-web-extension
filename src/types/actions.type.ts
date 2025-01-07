@@ -1,4 +1,4 @@
-export type ActionType = "show_alert" | "show_console";
+export type ActionType = "show_alert" | "show_console" | "inject_script";
 
 export interface ActionBase {
   type: ActionType;
@@ -17,4 +17,11 @@ export interface ShowConsoleAction extends ActionBase {
   };
 }
 
-export type Action = ShowAlertAction | ShowConsoleAction;
+export interface InjectScriptAction extends ActionBase {
+  params: {
+    script: string;
+    mainIframeOnly: boolean;
+  };
+}
+
+export type Action = ShowAlertAction | ShowConsoleAction | InjectScriptAction;

@@ -1,8 +1,11 @@
 import browser from "webextension-polyfill";
-import { ActionType, Action, ShowAlertAction, ShowConsoleAction } from "@/types/actions.type";
+import { ActionType, Action, ShowAlertAction, ShowConsoleAction, InjectScriptAction } from "@/types/actions.type";
+import { getCurrentTabId } from "@/helpers/background-utils.helper";
 
 export const actionsHandlers: Record<ActionType, (action: Action) => void | Promise<void>> = {
-  show_alert: async (action: ShowAlertAction) => {
+  show_alert: async (action) => {
+    action = action as ShowAlertAction;
+
     const notification = await browser.notifications.create("", {
       type: "basic",
       title: "Hercule",
@@ -11,8 +14,31 @@ export const actionsHandlers: Record<ActionType, (action: Action) => void | Prom
     });
     console.log("Notification created:", notification);
   },
-  show_console: async (action: ShowConsoleAction) => {
+  show_console: async (action) => {
+    action = action as ShowConsoleAction;
+
     console.log(action.params.message);
+  },
+  inject_script: async (action) => {
+    /*
+    // WARNING: This action is unsafe as it allows arbitrary JavaScript execution.
+    // It is currently only used for testing purposes and should be removed or secured before production use.
+    */
+    action = action as InjectScriptAction;
+
+    const tabId = await getCurrentTabId();
+
+    browser.scripting.executeScript({
+      target: { tabId: tabId },
+      func: (action: InjectScriptAction) => {
+        const el = document.createElement("script");
+        el.textContent = action.params.script;
+        document.documentElement.appendChild(el);
+        el.remove();
+      },
+      args: [action],
+      world: "MAIN",
+    });
   },
 };
 

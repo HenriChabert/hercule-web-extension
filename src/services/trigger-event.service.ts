@@ -5,17 +5,13 @@ import { contextExtractors } from "@/services/context-extractor.service";
 import { EventId, TriggerEventContext } from "@/types/events.type";
 import { handleActions } from "@/services/actions.service";
 import { TriggerEventResponse } from "@/services/hercule-server/hercule-api.types";
+import { getCurrentTabId } from "@/helpers/background-utils.helper";
 import { subscribe } from "@/services/webpush.service";
 
 abstract class TriggerEventService {
   abstract id: EventId;
   abstract register(): void;
   abstract onEventShouldTrigger(...args: unknown[]): Promise<boolean> | boolean;
-
-  async getCurrentTabId(): Promise<number> {
-    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-    return tabs[0].id || 0;
-  }
 
   async extractContext(tabId: number): Promise<Record<string, unknown>> {
     const context: Record<string, unknown> = {};
@@ -27,7 +23,7 @@ abstract class TriggerEventService {
 
   async triggerEvent(extractContext: Partial<TriggerEventContext> | null = null): Promise<TriggerEventResponse> {
     const herculeApi = await herculeApiFromStorage();
-    const tabId = await this.getCurrentTabId();
+    const tabId = await getCurrentTabId();
     let context = await this.extractContext(tabId);
 
     if (extractContext) {

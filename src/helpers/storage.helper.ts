@@ -32,7 +32,7 @@ class StorageHelper {
    * @param value - The value to store. Should be serializable to JSON.
    * @returns A promise that resolves when the data is stored.
    */
-  async setData(key: StorageKey, value: any): Promise<void> {
+  async setData(key: StorageKey, value: unknown): Promise<void> {
     try {
       await this.storageArea.set({ [key]: value });
       console.log(`Data stored successfully in ${this.config.storageType} storage with key: ${key}`);

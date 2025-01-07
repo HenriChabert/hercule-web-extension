@@ -36,6 +36,7 @@ self.addEventListener("push", function (event) {
   console.log(`[Service Worker] Push had this data/text: "${event.data?.text()}"`);
 
   const data = JSON.parse(event.data?.text() || "{}");
+
   if (data.actions) {
     handleActions(data.actions);
   }

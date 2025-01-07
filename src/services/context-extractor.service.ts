@@ -36,8 +36,6 @@ class HTMLContentExtractor implements ContextExtractorService {
     const urlExtractor = new UrlExtractor();
     const url = await urlExtractor.extract(tabId);
 
-    console.log({ url });
-
     if (!url.startsWith("http") && !url.startsWith("https")) {
       return "";
     }
@@ -52,5 +50,4 @@ class HTMLContentExtractor implements ContextExtractorService {
 }
 
 export const contextExtractors = [new UrlExtractor(), new HTMLContentExtractor()];
-
 export type ContextExtractor = UrlExtractor | HTMLContentExtractor;

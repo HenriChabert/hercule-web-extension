@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { viteStaticCopy } from 'vite-plugin-static-copy';
-import { resolve } from 'path';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { viteStaticCopy } from "vite-plugin-static-copy";
+import { resolve } from "path";
 
 export default defineConfig({
   plugins: [
@@ -9,9 +9,13 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'public/manifest.json',
-          dest: '.',
-        }
+          src: "public/manifest.json",
+          dest: ".",
+        },
+        {
+          src: "src/extension/sandbox.html",
+          dest: ".",
+        },
       ],
     }),
   ],
@@ -21,16 +25,16 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'build',
+    outDir: "build",
     rollupOptions: {
       input: {
-        main: resolve(__dirname, './index.html'),
-        background: resolve(__dirname, './src/extension/background.ts'),
+        main: resolve(__dirname, "./index.html"),
+        background: resolve(__dirname, "./src/extension/background.ts"),
+        "content-script": resolve(__dirname, "./src/extension/content-script.ts"),
         // popup: resolve(__dirname, 'src/popup.html'),
-        // content: resolve(__dirname, 'src/content.ts'),
       },
       output: {
-        entryFileNames: '[name].js', // Specify output as JS files
+        entryFileNames: "[name].js", // Specify output as JS files
       },
     },
   },

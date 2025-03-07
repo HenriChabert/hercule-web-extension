@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.26.0",
+    "@crxjs/vite-plugin": "^2.0.0-beta.32",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.3",

@@ -1,5 +1,12 @@
 import browser from "webextension-polyfill";
-import { ActionType, Action, ShowAlertAction, ShowConsoleAction, InjectScriptAction } from "@/types/actions.type";
+import {
+  ActionType,
+  Action,
+  ShowAlertAction,
+  ShowConsoleAction,
+  InjectScriptAction,
+  InsertButtonAction,
+} from "@/types/actions.type";
 import { getCurrentTabId } from "@/helpers/background-utils.helper";
 
 export const actionsHandlers: Record<ActionType, (action: Action) => void | Promise<void>> = {
@@ -39,6 +46,11 @@ export const actionsHandlers: Record<ActionType, (action: Action) => void | Prom
       args: [action],
       world: "MAIN",
     });
+  },
+  insert_button: async (action) => {
+    action = action as InsertButtonAction;
+
+    const tabId = await getCurrentTabId();
   },
 };
 

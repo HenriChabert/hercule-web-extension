@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "A simple React app as a Chrome extension",
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "src/extension/background.ts",
     "type": "module"
   },
   "action": {
@@ -13,7 +13,7 @@
   "content_scripts": [
     {
       "matches": ["https://*/*", "http://*/*"],
-      "js": ["content-script.js"],
+      "js": ["src/content-script/src/main.tsx"],
       "type": "module"
     }
   ],

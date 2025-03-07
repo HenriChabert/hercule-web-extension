@@ -141,10 +141,11 @@ export class HerculeApi {
     return false;
   }
 
-  async listTriggers({ event }: { event?: EventId }): Promise<Trigger[]> {
+  async listTriggers({ event, url }: { event?: EventId; url?: string }): Promise<Trigger[]> {
     const response: AxiosResponse<Trigger[]> = await this.client.get("/triggers", {
       params: {
         event,
+        url,
       },
     });
     return response.data;

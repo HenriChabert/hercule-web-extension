@@ -13,6 +13,7 @@ import { triggerEventServices } from "@/services/trigger-event.service";
 import { herculeApiFromStorage } from "@/services/hercule-server/hercule-api";
 import { onConnectStatusMessage, onConnectMessage, onDisconnectMessage } from "@/services/auth.service";
 import { MessageTriggerEventService } from "@/services/trigger-event.service";
+import { getCurrentTabUrl } from "@/helpers/background-utils.helper";
 
 self.addEventListener("activate", () => {
   registerEvents();
@@ -42,8 +43,10 @@ const onListTriggersMessage = async (): Promise<ListTriggersMessageResponse> => 
   const herculeApi = await herculeApiFromStorage();
   let triggers: Trigger[];
   try {
+    const url = await getCurrentTabUrl();
     triggers = await herculeApi.listTriggers({
       event: "button_clicked",
+      url,
     });
   } catch (error: unknown) {
     console.error("Error listing triggers:", error);

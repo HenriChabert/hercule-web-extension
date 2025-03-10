@@ -31,6 +31,7 @@ export interface ButtonParams {
   size: "small" | "medium" | "large";
   position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "in-content";
   parentCssSelector?: string;
+  customCss?: string;
 }
 
 export interface InsertButtonAction extends ActionBase {

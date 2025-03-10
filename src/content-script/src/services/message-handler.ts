@@ -9,6 +9,8 @@ const handleInsertButton = async (message: InsertButtonMessage) => {
     size: message.payload.button.size || "medium",
     variant: message.payload.button.variant || "primary",
     position: message.payload.button.position || "top-left",
+    parentCssSelector: message.payload.button.parentCssSelector,
+    customCss: message.payload.button.customCss,
   });
 };
 

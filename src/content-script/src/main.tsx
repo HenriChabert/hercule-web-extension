@@ -4,22 +4,8 @@ import App from "./App";
 import browser from "webextension-polyfill";
 import { handleMessage } from "./services/message-handler";
 import { Message } from "@/types/messages.type";
-
-import { twind, cssom, observe } from "@twind/core";
-
-import config from "../../../twind.config";
 import { APP_SLUG } from "@/config/constants";
-
-function attachCSS(shadowRoot: ShadowRoot) {
-  const sheet = cssom(new CSSStyleSheet());
-
-  const tw = twind(config, sheet);
-
-  shadowRoot.adoptedStyleSheets = [sheet.target];
-
-  observe(tw, shadowRoot);
-  return sheet;
-}
+import { attachCSS } from "./helpers/twind";
 
 async function createAppRoot() {
   // Create container div

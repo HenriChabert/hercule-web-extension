@@ -41,7 +41,7 @@ function TriggerItem({ trigger }: TriggerItemProps) {
 
     const response = (await browser.runtime.sendMessage({
       type: "TRIGGER_EVENT",
-      payload: { event: { id: "button_clicked", context: { triggerId: trigger.id, url: currentUrl } } },
+      payload: { event: { id: "manual_trigger_in_popup", context: { triggerId: trigger.id, url: currentUrl } } },
     } as TriggerEventMessage)) as TriggerEventMessageResponse;
 
     if (response.success) {

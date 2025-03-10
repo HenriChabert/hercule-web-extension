@@ -51,13 +51,20 @@ export const actionsHandlers: Record<ActionType, (action: Action) => void | Prom
     action = action as InsertButtonAction;
 
     const tabId = await getCurrentTabId();
+
+    console.log("Inserting button", { params: action.params, tab: tabId });
+
+    browser.tabs.sendMessage(tabId, {
+      type: "INSERT_BUTTON",
+      payload: action.params,
+    });
   },
 };
 
-function handleAction(action: Action): void {
+export async function handleAction(action: Action): Promise<void> {
   const handler = actionsHandlers[action.type];
   if (handler) {
-    handler(action);
+    await handler(action);
   }
 }
 

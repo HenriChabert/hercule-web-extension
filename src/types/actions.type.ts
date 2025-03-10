@@ -24,15 +24,18 @@ export interface InjectScriptAction extends ActionBase {
   };
 }
 
+export interface ButtonParams {
+  id: string;
+  label: string;
+  variant: "primary" | "secondary" | "success" | "warning" | "danger";
+  size: "small" | "medium" | "large";
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "in-content";
+  parentCssSelector?: string;
+}
+
 export interface InsertButtonAction extends ActionBase {
   params: {
-    button_label: string;
-    button_variant: "primary" | "secondary" | "success" | "warning" | "danger";
-    button_size: "small" | "medium" | "large";
-    button_position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "in-content";
-    button_parent_css_selector?: string;
-    button_action: "launch_trigger";
-    trigger_id?: string;
+    button: ButtonParams;
   };
 }
 

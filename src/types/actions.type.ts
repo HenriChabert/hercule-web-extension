@@ -30,13 +30,20 @@ export interface ButtonParams {
   variant: "primary" | "secondary" | "success" | "warning" | "danger";
   size: "small" | "medium" | "large";
   position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "in-content";
-  parentCssSelector?: string;
+  anchorCssSelector?: string;
+  positionToAnchor?: "first-child" | "last-child" | "nth-child" | "before" | "after" | "replace";
+  nthChildIndex?: number;
+  applyOnAllCssSelectorMatches?: boolean;
+  customHtml?: string;
   customCss?: string;
+  anchorCustomCss?: string;
 }
 
 export interface InsertButtonAction extends ActionBase {
   params: {
     button: ButtonParams;
+    buttonAction: "run_trigger";
+    triggerId?: string;
   };
 }
 

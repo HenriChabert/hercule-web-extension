@@ -36,10 +36,18 @@ function App() {
 
     // Create button element inside shadow root
     const buttonElement = document.createElement("div");
+
     buttonElement.innerHTML = renderToString(<InContentButton {...button} />);
+    buttonElement.addEventListener("click", () => onButtonClick(button));
     shadowRoot.appendChild(buttonElement);
 
     attachCSS(shadowRoot);
+
+    // Create style element inside shadow root
+    const styleElement = document.createElement("style");
+    styleElement.appendChild(document.createTextNode(button.customCss || ""));
+
+    shadowRoot.appendChild(styleElement);
 
     return container;
   };
@@ -56,19 +64,47 @@ function App() {
     setInContentButtonsContainers([]);
   };
 
+  const anchorElement = (
+    element: Element,
+    anchor: Element,
+    positionToAnchor: Button["positionToAnchor"],
+    nthChildIndex: Button["nthChildIndex"]
+  ) => {
+    if (positionToAnchor === "first-child") {
+      anchor.insertBefore(element, anchor.firstChild);
+    } else if (positionToAnchor === "last-child") {
+      anchor.appendChild(element);
+    } else if (positionToAnchor === "nth-child" && nthChildIndex !== undefined) {
+      anchor.insertBefore(element, anchor.children[nthChildIndex] || anchor.lastChild);
+    } else if (positionToAnchor === "before") {
+      anchor.parentElement?.insertBefore(element, anchor);
+    } else if (positionToAnchor === "after") {
+      anchor.parentElement?.insertBefore(element, anchor.nextSibling);
+    } else if (positionToAnchor === "replace") {
+      anchor.parentElement?.replaceChild(element, anchor);
+    }
+  };
+
   const insertInContentButtons = () => {
     const inContentButtonsContainersInner: HTMLDivElement[] = [];
     if (inContentButtons) {
       inContentButtons.forEach((button) => {
-        if (!button.parentCssSelector) return;
+        if (!button.anchorCssSelector) return;
 
-        const parentAnchor = document.querySelectorAll(button.parentCssSelector);
+        let anchor = Array.from(document.querySelectorAll(button.anchorCssSelector));
 
-        if (!parentAnchor) return;
+        if (!anchor || anchor.length === 0) return;
 
-        parentAnchor.forEach((anchor) => {
+        if (!button.applyOnAllCssSelectorMatches) {
+          anchor = [anchor[0]];
+        }
+
+        anchor.forEach((anchor) => {
           const container = createInContentButton(button);
-          anchor.appendChild(container);
+          anchorElement(container, anchor, button.positionToAnchor, button.nthChildIndex);
+          if (button.anchorCustomCss) {
+            (anchor as HTMLElement).style.cssText = button.anchorCustomCss;
+          }
           inContentButtonsContainersInner.push(container);
         });
       });
@@ -106,12 +142,12 @@ function App() {
           if (node instanceof Element) {
             // Check if the node itself matches
             const nodeMatches = inContentButtons?.some(
-              (button) => button.parentCssSelector && node.matches(button.parentCssSelector)
+              (button) => button.anchorCssSelector && node.matches(button.anchorCssSelector)
             );
 
             // Check if any children match
             const childrenMatch = inContentButtons?.some(
-              (button) => button.parentCssSelector && node.querySelectorAll(button.parentCssSelector).length > 0
+              (button) => button.anchorCssSelector && node.querySelectorAll(button.anchorCssSelector).length > 0
             );
 
             return nodeMatches || childrenMatch;
@@ -138,8 +174,9 @@ function App() {
     };
   }, []);
 
-  const onButtonClick = async (id: string) => {
-    setButtonLoading(id);
+  const onButtonClick = async (button: Button) => {
+    console.log({ button });
+    setButtonLoading(button.id);
     try {
       const response: TriggerEventMessageResponse = await browser.runtime.sendMessage({
         type: "TRIGGER_EVENT",
@@ -147,7 +184,7 @@ function App() {
           event: {
             id: "button_clicked",
             context: {
-              triggerId: id,
+              trigger_id: button.triggerId,
             },
           },
         },
@@ -176,7 +213,7 @@ function App() {
                 variant={button.variant}
                 size={button.size}
                 loading={buttonLoading === button.id}
-                onClick={() => onButtonClick(button.id)}
+                onClick={() => onButtonClick(button)}
               />
             ))}
           </FloatingButtonsBar>

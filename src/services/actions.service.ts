@@ -52,8 +52,6 @@ export const actionsHandlers: Record<ActionType, (action: Action) => void | Prom
 
     const tabId = await getCurrentTabId();
 
-    console.log("Inserting button", { params: action.params, tab: tabId });
-
     browser.tabs.sendMessage(tabId, {
       type: "INSERT_BUTTON",
       payload: action.params,

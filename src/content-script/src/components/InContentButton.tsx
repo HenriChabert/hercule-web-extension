@@ -1,4 +1,6 @@
+import { APP_SLUG } from "@/config/constants";
 import cn from "classnames";
+import { useEffect } from "react";
 
 interface InContentButtonProps {
   label: string;
@@ -7,6 +9,7 @@ interface InContentButtonProps {
   onClick?: () => void;
   className?: string;
   loading?: boolean;
+  customHtml?: string;
   customCss?: string;
 }
 
@@ -18,13 +21,13 @@ export default function InContentButton({
   className = "",
   loading = false,
   customCss = "",
+  customHtml = "",
 }: InContentButtonProps) {
-  let styleAsObject = {};
-  try {
-    styleAsObject = JSON.parse(customCss);
-  } catch (error) {
-    console.warn("Failed to parse custom CSS:", error);
-  }
+  useEffect(() => {
+    const newStyle = document.createElement("style");
+    newStyle.innerHTML = customCss;
+    document.head.appendChild(newStyle);
+  }, [customCss]);
 
   const sizeClasses = {
     small: "px-2 py-1 text-sm",
@@ -40,6 +43,14 @@ export default function InContentButton({
     danger: "bg-red-500 hover:bg-red-600 text-white",
   };
 
+  const customHTMLContent = customHtml ? (
+    <div onClick={onClick} className={cn(className)} dangerouslySetInnerHTML={{ __html: customHtml }} />
+  ) : null;
+
+  if (customHTMLContent) {
+    return customHTMLContent;
+  }
+
   return (
     <button
       onClick={onClick}
@@ -49,9 +60,9 @@ export default function InContentButton({
         sizeClasses[size],
         variantClasses[variant],
         loading && "opacity-50 cursor-not-allowed",
-        className
+        className,
+        `${APP_SLUG}-in-content-button`
       )}
-      style={styleAsObject}
     >
       {loading ? "Loading..." : label}
     </button>

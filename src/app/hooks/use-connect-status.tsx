@@ -6,12 +6,14 @@ import { ConnectConfig, ConnectStatus } from "../../types/messages.type";
 interface ConnectState {
   connectStatus: ConnectStatus;
   connectConfig: ConnectConfig | null;
+  isAuthenticated: boolean;
 }
 
 const useConnectStatus = () => {
   const [connectState, setConnectState] = useState<ConnectState>({
     connectStatus: "loading",
     connectConfig: null,
+    isAuthenticated: false
   });
 
   const getStatus = async () => {
@@ -29,6 +31,7 @@ const useConnectStatus = () => {
       setConnectState({
         connectStatus: status.payload.status,
         connectConfig: status.payload.connectConfig,
+        isAuthenticated: status.payload.isAuthenticated
       });
     };
     initConnectState();

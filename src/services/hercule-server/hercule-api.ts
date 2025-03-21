@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { HealthResponse, Trigger, TriggerEventResponse, TriggerEventResponseItem } from "./hercule-api.types";
+import { HealthResponse, LoginResponse, Trigger, TriggerEventResponse, TriggerEventResponseItem, MeResponse } from "./hercule-api.types";
 import { TriggerEventContext } from "@/types/events.type";
 import { camelCaseToSnakeCase } from "@/helpers/utils.helper";
 import { StorageHelper } from "@/helpers/storage.helper";
@@ -16,11 +16,10 @@ export const herculeApiFromStorage = async () => {
   const herculeApi = new HerculeApi();
 
   const serverUrl = await storageHelper.getData<string>("serverUrl");
-  const secretKey = await storageHelper.getData<string>("secretKey");
 
-  if (serverUrl && secretKey) {
+  if (serverUrl) {
     try {
-      await herculeApi.connect({ serverUrl: serverUrl, secretKey: secretKey });
+      await herculeApi.connect({ serverUrl: serverUrl });
     } catch (error) {
       console.error("Error initializing Hercule API:", error);
     }
@@ -34,7 +33,6 @@ export class HerculeApi {
   public serverUrl: string | null = null;
 
   private client: AxiosInstance;
-  private secretKey: string | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -77,29 +75,26 @@ export class HerculeApi {
     return URLRegex.test(serverUrl);
   }
 
-  validateCredentials({ serverUrl, secretKey }: { serverUrl: string; secretKey: string }): boolean {
+  validateCredentials({ serverUrl }: { serverUrl: string; }): boolean {
     const validURL = this.validateServerUrl(serverUrl);
-    const validSecretKey = secretKey.length > 0;
 
-    return validURL && validSecretKey;
+    return validURL;
   }
 
   isInitialized(): boolean {
-    return this.serverUrl !== null && this.secretKey !== null;
+    return this.serverUrl !== null;
   }
 
   // Method to authenticate and store the token
-  async connect({ serverUrl, secretKey }: { serverUrl: string; secretKey: string }): Promise<void> {
+  async connect({ serverUrl }: { serverUrl: string }): Promise<void> {
     try {
-      if (!(await this.validateCredentials({ serverUrl, secretKey }))) {
+      if (!(await this.validateCredentials({ serverUrl }))) {
         throw new Error("Invalid credentials. Please check the URL and secret key");
       }
 
-      this.secretKey = secretKey;
       this.serverUrl = serverUrl;
 
       this.client.defaults.baseURL = `${this.serverUrl}/api/v1`;
-      this.client.defaults.headers["X-Hercule-Secret-Key"] = this.secretKey;
 
       const isConnected = await this.isConnected();
 
@@ -114,11 +109,10 @@ export class HerculeApi {
 
   async disconnect(): Promise<void> {
     this.serverUrl = null;
-    this.secretKey = null;
   }
 
   async getHealthSecured(): Promise<HealthResponse> {
-    const response: AxiosResponse<HealthResponse> = await this.client.get("/health-secured");
+    const response: AxiosResponse<HealthResponse> = await this.client.get("/health");
     return response.data;
   }
 
@@ -139,6 +133,60 @@ export class HerculeApi {
     }
 
     return false;
+  }
+
+  async isAuthenticated(): Promise<boolean> {
+    const token = await this.retrieveAuthToken();
+    if (!token) {
+      return false;
+    }
+
+    try {
+      await this.me();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async storeAuthToken(token: string): Promise<void> {
+    await storageHelper.setData("authToken", token);
+  }
+
+  async retrieveAuthToken(): Promise<string | null> {
+    return await storageHelper.getData<string>("authToken") ?? null;
+  }
+
+  async eraseAuthToken(): Promise<void> {
+    await storageHelper.eraseData("authToken");
+  }
+
+  async setAuthToken(token: string): Promise<void> {
+    this.client.defaults.headers["Authorization"] = `Bearer ${token}`;
+    await this.storeAuthToken(token);
+  }
+
+  async removeAuthToken(): Promise<void> {
+    delete this.client.defaults.headers["Authorization"];
+    await this.eraseAuthToken();
+  }
+
+  async login({ email, password }: { email: string; password: string }): Promise<LoginResponse> {
+    const response: AxiosResponse<LoginResponse> = await this.client.post("/auth/login", { email, password });
+    if (response.data.token) {
+      await this.setAuthToken(response.data.token.access_token);
+    }
+    return response.data;
+  }
+
+  async me(): Promise<MeResponse> {
+    const response: AxiosResponse<MeResponse> = await this.client.get("/auth/me");
+    return response.data;
+  }
+
+  async logout(): Promise<void> {
+    await this.client.post("/auth/logout");
+    await this.removeAuthToken();
   }
 
   async listTriggers({ event, url }: { event?: EventId; url?: string }): Promise<Trigger[]> {

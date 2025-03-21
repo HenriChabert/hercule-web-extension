@@ -1,18 +1,16 @@
 import { Flex, Text, Button } from "@radix-ui/themes";
 import { useNavigate } from "react-router-dom";
 import { TextField } from "@radix-ui/themes";
-import { UserIcon, KeyIcon } from "lucide-react";
+import { UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import browser from "webextension-polyfill";
 import { ConnectMessage, ConnectMessageResponse } from "../types/messages.type";
 import useConnectStatus from "./hooks/use-connect-status";
 
 const DEFAULT_SERVER_URL = "http://localhost:8000";
-const DEFAULT_SECRET_KEY = "my_secret_key";
 
 function Connect() {
   const [serverUrl, setServerUrl] = useState(DEFAULT_SERVER_URL);
-  const [secretKey, setSecretKey] = useState(DEFAULT_SECRET_KEY);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { connectStatus, connectConfig } = useConnectStatus();
@@ -52,7 +50,7 @@ function Connect() {
     try {
       const response = (await browser.runtime.sendMessage({
         type: "CONNECT",
-        payload: { serverUrl, secretKey },
+        payload: { serverUrl },
       } as ConnectMessage)) as ConnectMessageResponse;
 
       if (response.success) {
@@ -61,12 +59,12 @@ function Connect() {
       } else {
         setError(
           "Failed to connect. Please check your credentials. Original error: " +
-            JSON.stringify(response.payload.message)
+          JSON.stringify(response.payload?.message)
         );
       }
     } catch (error) {
       console.error("Error logging in:", error);
-      setError("An error occurred during login: " + error);
+      setError("An error occurred during connection: " + error);
     }
   };
 
@@ -98,19 +96,6 @@ function Connect() {
           >
             <TextField.Slot>
               <UserIcon height="16" width="16" />
-            </TextField.Slot>
-          </TextField.Root>
-        </Flex>
-        <Flex direction="column" width="100%">
-          <Text>Hercule Secret Key</Text>
-          <TextField.Root
-            placeholder="abcdef1234"
-            value={secretKey}
-            onChange={(e) => setSecretKey(e.target.value)}
-            type="password"
-          >
-            <TextField.Slot>
-              <KeyIcon height="16" width="16" />
             </TextField.Slot>
           </TextField.Root>
         </Flex>

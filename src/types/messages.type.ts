@@ -1,6 +1,6 @@
 import { TriggerEventResponseItem } from "@/services/hercule-server/hercule-api.types";
 import { TriggerEvent } from "./events.type";
-
+import { User } from "./user.type";
 export interface Message {
   type: string;
   payload: Record<string, unknown>;
@@ -28,7 +28,6 @@ export interface ConnectMessage extends Message {
   type: "CONNECT";
   payload: {
     serverUrl: string;
-    secretKey: string;
   };
 }
 
@@ -62,9 +61,27 @@ export interface ConnectStatusMessageResponse extends MessageResponse {
   payload: {
     status: ConnectStatus;
     connectConfig: ConnectConfig | null;
+    isAuthenticated: boolean;
   };
 }
 
+// Login
+
+export interface LoginMessage extends Message {
+  type: "LOGIN";
+  payload: {
+    email: string;
+    password: string;
+  };
+}
+
+export interface LoginMessageResponse extends MessageResponse {
+  success: boolean;
+  payload: {
+    user: User;
+    error?: string;
+  };
+}
 // List Triggers
 
 export interface Trigger {

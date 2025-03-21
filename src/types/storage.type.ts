@@ -1,1 +1,1 @@
-export type StorageKey = 'serverUrl' | 'secretKey';
+export type StorageKey = 'serverUrl' | 'authToken' | 'email';

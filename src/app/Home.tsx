@@ -7,12 +7,17 @@ import TriggersList from "./components/TriggersList";
 
 function Home() {
   const navigate = useNavigate();
-  const { connectStatus } = useConnectStatus();
+  const { connectStatus, isAuthenticated } = useConnectStatus();
+
+  console.log({ connectStatus, isAuthenticated });
 
   useEffect(() => {
     if (connectStatus === "loading") return;
     if (connectStatus === "disconnected") {
       return navigate("/connect");
+    }
+    if (connectStatus === "connected" && !isAuthenticated) {
+      return navigate("/login");
     }
   }, [connectStatus, navigate]);
 

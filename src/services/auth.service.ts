@@ -1,4 +1,4 @@
-import { ConnectMessageResponse, ConnectStatus, DisconnectMessageResponse } from "@/types/messages.type";
+import { ConnectMessageResponse, ConnectStatus, DisconnectMessageResponse, LoginMessage, LoginMessageResponse } from "@/types/messages.type";
 import { ConnectMessage } from "@/types/messages.type";
 import { ConnectConfig } from "@/types/messages.type";
 import { ConnectStatusMessageResponse } from "@/types/messages.type";
@@ -11,6 +11,7 @@ export const onConnectStatusMessage = async (): Promise<ConnectStatusMessageResp
   const herculeApi = await herculeApiFromStorage();
 
   const isConnected = await herculeApi.isConnected();
+  const isAuthenticated = await herculeApi.isAuthenticated();
   const connectStatus = isConnected ? "connected" : ("disconnected" as ConnectStatus);
   const connectConfig: ConnectConfig = {
     serverUrl: herculeApi.serverUrl,
@@ -18,7 +19,11 @@ export const onConnectStatusMessage = async (): Promise<ConnectStatusMessageResp
 
   const response = {
     success: true,
-    payload: { status: connectStatus, connectConfig: connectConfig },
+    payload: {
+      status: connectStatus,
+      connectConfig: connectConfig,
+      isAuthenticated: isAuthenticated
+    },
   };
 
   return response;
@@ -30,20 +35,17 @@ export const onConnectMessage = async (message: ConnectMessage): Promise<Connect
   try {
     if (
       !herculeApi.validateCredentials({
-        serverUrl: message.payload.serverUrl,
-        secretKey: message.payload.secretKey,
+        serverUrl: message.payload.serverUrl
       })
     ) {
       return { success: false, payload: { message: "Invalid credentials" } };
     }
 
     await herculeApi.connect({
-      serverUrl: message.payload.serverUrl,
-      secretKey: message.payload.secretKey,
+      serverUrl: message.payload.serverUrl
     });
 
     storageHelper.setData("serverUrl", message.payload.serverUrl);
-    storageHelper.setData("secretKey", message.payload.secretKey);
 
     return { success: true };
   } catch (error: unknown) {
@@ -55,7 +57,6 @@ export const onConnectMessage = async (message: ConnectMessage): Promise<Connect
 export const onDisconnectMessage = async (): Promise<DisconnectMessageResponse> => {
   try {
     storageHelper.eraseData("serverUrl");
-    storageHelper.eraseData("secretKey");
 
     const herculeApi = await herculeApiFromStorage();
     await herculeApi.disconnect();
@@ -65,4 +66,15 @@ export const onDisconnectMessage = async (): Promise<DisconnectMessageResponse> 
     console.error("Error logging out:", error);
     return { success: false };
   }
+};
+
+export const onLoginMessage = async (message: LoginMessage): Promise<LoginMessageResponse> => {
+  const herculeApi = await herculeApiFromStorage();
+  const response = await herculeApi.login(message.payload);
+  return {
+    success: true, payload: {
+      error: response.error,
+      user: response.user
+    }
+  };
 };

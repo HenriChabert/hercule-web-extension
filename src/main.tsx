@@ -4,7 +4,7 @@ import Connect from "./app/Connect.tsx";
 import Home from "./app/Home.tsx";
 import { Theme } from "@radix-ui/themes";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
-
+import Login from "./app/Login.tsx";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
 import { ToasterProvider } from "./app/components/toaster/ToasterProvider";
@@ -17,6 +17,10 @@ const router = createMemoryRouter([
   {
     path: "/connect",
     element: <Connect />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
   },
 ]);
 

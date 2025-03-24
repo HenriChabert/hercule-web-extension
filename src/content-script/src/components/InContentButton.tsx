@@ -27,6 +27,10 @@ export default function InContentButton({
     const newStyle = document.createElement("style");
     newStyle.innerHTML = customCss;
     document.head.appendChild(newStyle);
+
+    return () => {
+      document.head.removeChild(newStyle);
+    };
   }, [customCss]);
 
   const sizeClasses = {

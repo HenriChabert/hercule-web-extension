@@ -45,7 +45,7 @@ const onListTriggersMessage = async (): Promise<ListTriggersMessageResponse> => 
   try {
     const url = await getCurrentTabUrl();
     triggers = await herculeApi.listTriggers({
-      event: "button_clicked",
+      event: "manual_trigger_in_popup",
       url,
     });
   } catch (error: unknown) {

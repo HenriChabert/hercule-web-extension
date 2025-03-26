@@ -1,9 +1,9 @@
 import { Action } from "./actions.type";
 
-export type EventId = "button_clicked" | "page_opened";
+export type EventId = "button_clicked" | "page_opened" | "manual_trigger_in_popup";
 
 export interface TriggerEventContext {
-  triggerId?: string;
+  trigger_id?: string;
   url?: string;
   html_content?: string;
 }

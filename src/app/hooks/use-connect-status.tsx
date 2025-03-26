@@ -23,15 +23,23 @@ const useConnectStatus = () => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const initConnectState = async () => {
       const status = await getStatus();
 
-      setConnectState({
-        connectStatus: status.payload.status,
-        connectConfig: status.payload.connectConfig,
-      });
+      if (mounted) {
+        setConnectState({
+          connectStatus: status.payload.status,
+          connectConfig: status.payload.connectConfig,
+        });
+      }
     };
     initConnectState();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return connectState;

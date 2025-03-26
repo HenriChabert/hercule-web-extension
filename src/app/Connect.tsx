@@ -15,6 +15,7 @@ function Connect() {
   const [secretKey, setSecretKey] = useState(DEFAULT_SECRET_KEY);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
   const { connectStatus, connectConfig } = useConnectStatus();
 
   const isUrlValid = (url: string) => {
@@ -61,7 +62,7 @@ function Connect() {
       } else {
         setError(
           "Failed to connect. Please check your credentials. Original error: " +
-            JSON.stringify(response.payload.message)
+            JSON.stringify(response.payload?.message)
         );
       }
     } catch (error) {
@@ -83,7 +84,7 @@ function Connect() {
         }
         break;
     }
-  }, [connectStatus]);
+  }, [connectStatus, connectConfig, navigate]);
 
   return (
     <Flex direction="column" height="600px" width="400px" px="8" py="4" align="center" className="!justify-around">

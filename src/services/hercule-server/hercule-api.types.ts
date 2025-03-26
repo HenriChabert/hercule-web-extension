@@ -18,5 +18,5 @@ export interface TriggerEventResponse {
 
 export interface TriggerEventResponseItem {
   status: "success" | "error";
-  actions?: Action[];
+  action?: Action;
 }

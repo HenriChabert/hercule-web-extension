@@ -46,8 +46,18 @@ export interface DisconnectMessage extends Message {
 export interface DisconnectMessageResponse extends MessageResponse {
   success: boolean;
 }
-// Connect Status
 
+// Logout
+
+export interface LogoutMessage extends Message {
+  type: "LOGOUT";
+}
+
+export interface LogoutMessageResponse extends MessageResponse {
+  success: boolean;
+}
+
+// Connect Status
 export type ConnectStatus = "loading" | "connected" | "disconnected";
 
 export interface ConnectConfig {
@@ -63,7 +73,7 @@ export interface ConnectStatusMessageResponse extends MessageResponse {
   payload: {
     status: ConnectStatus;
     connectConfig: ConnectConfig | null;
-    isAuthenticated: boolean;
+    user: User | null;
   };
 }
 

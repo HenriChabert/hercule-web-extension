@@ -4,7 +4,7 @@ import { TriggerEventContext } from "@/types/events.type";
 import { camelCaseToSnakeCase } from "@/helpers/utils.helper";
 import { StorageHelper } from "@/helpers/storage.helper";
 import { EventId } from "@/types/events.type";
-
+import { User } from "@/types/user.type";
 const storageHelper = new StorageHelper({ storageType: "local" });
 let cachedHerculeApi: HerculeApi | null = null;
 
@@ -16,6 +16,7 @@ export const herculeApiFromStorage = async () => {
   const herculeApi = new HerculeApi();
 
   const serverUrl = await storageHelper.getData<string>("serverUrl");
+  const authToken = await storageHelper.getData<string>("authToken");
 
   if (serverUrl) {
     try {
@@ -25,7 +26,12 @@ export const herculeApiFromStorage = async () => {
     }
   }
 
+  if (authToken) {
+    await herculeApi.setAuthToken(authToken);
+  }
+
   cachedHerculeApi = herculeApi;
+  
   return herculeApi;
 };
 
@@ -179,9 +185,13 @@ export class HerculeApi {
     return response.data;
   }
 
-  async me(): Promise<MeResponse> {
-    const response: AxiosResponse<MeResponse> = await this.client.get("/auth/me");
-    return response.data;
+  async me(): Promise<User | null> {
+    try {
+      const response: AxiosResponse<MeResponse> = await this.client.get("/auth/me");
+      return response.data;
+    } catch (error) {
+      return null;
+    }
   }
 
   async logout(): Promise<void> {

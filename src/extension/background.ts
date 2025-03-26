@@ -6,13 +6,13 @@ import {
   ErrorMessageResponse,
   TriggerEventMessage,
   TriggerEventMessageResponse,
-  LoginMessage,
+  LoginMessage
 } from "../types/messages.type";
 import { ConnectMessage } from "../types/messages.type";
 import { ListTriggersMessageResponse } from "../types/messages.type";
 import { triggerEventServices } from "@/services/trigger-event.service";
 import { herculeApiFromStorage } from "@/services/hercule-server/hercule-api";
-import { onConnectStatusMessage, onConnectMessage, onDisconnectMessage, onLoginMessage } from "@/services/auth.service";
+import { onConnectStatusMessage, onConnectMessage, onDisconnectMessage, onLoginMessage, onLogoutMessage } from "@/services/auth.service";
 import { MessageTriggerEventService } from "@/services/trigger-event.service";
 import { getCurrentTabUrl } from "@/helpers/background-utils.helper";
 
@@ -91,6 +91,8 @@ const onMessage = async (message: unknown): Promise<MessageResponse> => {
       return onTriggerEventMessage(messageWithType as TriggerEventMessage);
     case "LOGIN":
       return onLoginMessage(messageWithType as LoginMessage);
+    case "LOGOUT":
+      return onLogoutMessage();
     default:
       return onFallbackMessage();
   }

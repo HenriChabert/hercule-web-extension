@@ -19,6 +19,5 @@
   ],
   "host_permissions": ["https://*/*", "http://*/*", "<all_urls>"],
   "optional_permissions": ["webRequest"],
-  "optional_host_permissions": ["<all_urls>"],
   "permissions": ["storage", "tabs", "notifications", "scripting", "activeTab", "scripting", "userScripts"]
 }

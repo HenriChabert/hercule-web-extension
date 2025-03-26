@@ -33,10 +33,5 @@ export interface LoginResponse {
   error?: string;
 }
 
-export interface MeResponse {
-  success: boolean;
-  payload: {
-    user: User;
-  };
-}
+export type MeResponse = User;
 

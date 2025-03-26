@@ -1,6 +1,6 @@
 import { APP_SLUG } from "@/config/constants";
-import cn from "classnames";
 import { useEffect } from "react";
+import cn from "classnames";
 
 interface InContentButtonProps {
   label: string;

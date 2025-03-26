@@ -2,18 +2,19 @@ import { useState, useEffect } from "react";
 import browser from "webextension-polyfill";
 import { ConnectStatusMessage, ConnectStatusMessageResponse } from "../../types/messages.type";
 import { ConnectConfig, ConnectStatus } from "../../types/messages.type";
+import { User } from "@/types/user.type";
 
 interface ConnectState {
   connectStatus: ConnectStatus;
   connectConfig: ConnectConfig | null;
-  isAuthenticated: boolean;
+  user: User | null;
 }
 
 const useConnectStatus = () => {
   const [connectState, setConnectState] = useState<ConnectState>({
     connectStatus: "loading",
     connectConfig: null,
-    isAuthenticated: false
+    user: null
   });
 
   const getStatus = async () => {
@@ -34,7 +35,7 @@ const useConnectStatus = () => {
         setConnectState({
           connectStatus: status.payload.status,
           connectConfig: status.payload.connectConfig,
-          isAuthenticated: status.payload.isAuthenticated
+          user: status.payload.user
         });
       }
     };

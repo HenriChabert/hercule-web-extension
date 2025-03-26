@@ -1,4 +1,4 @@
-import { ConnectMessageResponse, ConnectStatus, DisconnectMessageResponse, LoginMessage, LoginMessageResponse } from "@/types/messages.type";
+import { ConnectMessageResponse, ConnectStatus, DisconnectMessageResponse, LoginMessage, LoginMessageResponse, LogoutMessageResponse } from "@/types/messages.type";
 import { ConnectMessage } from "@/types/messages.type";
 import { ConnectConfig } from "@/types/messages.type";
 import { ConnectStatusMessageResponse } from "@/types/messages.type";
@@ -11,7 +11,7 @@ export const onConnectStatusMessage = async (): Promise<ConnectStatusMessageResp
   const herculeApi = await herculeApiFromStorage();
 
   const isConnected = await herculeApi.isConnected();
-  const isAuthenticated = await herculeApi.isAuthenticated();
+  const user = await herculeApi.me();
   const connectStatus = isConnected ? "connected" : ("disconnected" as ConnectStatus);
   const connectConfig: ConnectConfig = {
     serverUrl: herculeApi.serverUrl,
@@ -22,7 +22,7 @@ export const onConnectStatusMessage = async (): Promise<ConnectStatusMessageResp
     payload: {
       status: connectStatus,
       connectConfig: connectConfig,
-      isAuthenticated: isAuthenticated
+      user: user
     },
   };
 
@@ -71,10 +71,17 @@ export const onDisconnectMessage = async (): Promise<DisconnectMessageResponse> 
 export const onLoginMessage = async (message: LoginMessage): Promise<LoginMessageResponse> => {
   const herculeApi = await herculeApiFromStorage();
   const response = await herculeApi.login(message.payload);
+
   return {
     success: true, payload: {
       error: response.error,
       user: response.user
     }
   };
+};
+
+export const onLogoutMessage = async (): Promise<LogoutMessageResponse> => {
+  const herculeApi = await herculeApiFromStorage();
+  await herculeApi.logout();
+  return { success: true };
 };

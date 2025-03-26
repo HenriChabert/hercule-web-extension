@@ -1,6 +1,8 @@
 import { TriggerEventResponseItem } from "@/services/hercule-server/hercule-api.types";
 import { TriggerEvent } from "./events.type";
 import { User } from "./user.type";
+import { InsertButtonAction } from "./actions.type";
+
 export interface Message {
   type: string;
   payload: Record<string, unknown>;
@@ -138,5 +140,16 @@ export interface RunTriggerMessage extends Message {
 }
 
 export interface RunTriggerMessageResponse extends MessageResponse {
+  success: boolean;
+}
+
+// Insert Button
+
+export interface InsertButtonMessage extends Message {
+  type: "INSERT_BUTTON";
+  payload: InsertButtonAction["params"];
+}
+
+export interface InsertButtonMessageResponse extends MessageResponse {
   success: boolean;
 }

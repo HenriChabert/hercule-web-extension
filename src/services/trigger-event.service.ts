@@ -3,7 +3,7 @@ import { TriggerEventMessage } from "@/types/messages.type";
 import { herculeApiFromStorage } from "@/services/hercule-server/hercule-api";
 import { contextExtractors } from "@/services/context-extractor.service";
 import { EventId, TriggerEventContext } from "@/types/events.type";
-import { handleActions } from "@/services/actions.service";
+import { handleAction } from "@/services/actions.service";
 import { TriggerEventResponse } from "@/services/hercule-server/hercule-api.types";
 import { getCurrentTabId } from "@/helpers/background-utils.helper";
 import { subscribe } from "@/services/webpush.service";
@@ -13,7 +13,7 @@ abstract class TriggerEventService {
   abstract register(): void;
   abstract onEventShouldTrigger(...args: unknown[]): Promise<boolean> | boolean;
 
-  async extractContext(tabId: number): Promise<Record<string, unknown>> {
+  async extractContext(tabId: number | null): Promise<Record<string, unknown>> {
     const context: Record<string, unknown> = {};
     for (const extractor of contextExtractors) {
       context[extractor.name] = await extractor.extract(tabId);
@@ -21,9 +21,16 @@ abstract class TriggerEventService {
     return context;
   }
 
-  async triggerEvent(extractContext: Partial<TriggerEventContext> | null = null): Promise<TriggerEventResponse> {
+  async triggerEvent(
+    extractContext: Partial<TriggerEventContext> | null = null,
+    tabId: number | null = null
+  ): Promise<TriggerEventResponse> {
     const herculeApi = await herculeApiFromStorage();
-    const tabId = await getCurrentTabId();
+
+    if (!tabId) {
+      tabId = await getCurrentTabId();
+    }
+
     let context = await this.extractContext(tabId);
 
     if (extractContext) {
@@ -31,7 +38,11 @@ abstract class TriggerEventService {
     }
 
     const subscription = await subscribe();
-    console.log("🚀 ~ TriggerEventService ~ triggerEvent ~ subscription:", subscription);
+    console.log("🚀 ~ TriggerEventServic ~ triggerEvent ~ subscription:", {
+      subscription,
+      context,
+      event: this.id,
+    });
 
     const response = await herculeApi.triggerEvent({
       event: this.id,
@@ -41,8 +52,8 @@ abstract class TriggerEventService {
 
     if (response.payload && response.success) {
       response.payload.forEach((item) => {
-        if (item.actions) {
-          handleActions(item.actions);
+        if (item.action) {
+          handleAction(item.action);
         }
       });
     }
@@ -73,7 +84,8 @@ abstract class TabUpdatedTriggerEventService extends TriggerEventService {
 
     const handler = async (tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType) => {
       if (await this.onEventShouldTrigger(tabId, changeInfo)) {
-        return (await this.triggerEvent()) as TriggerEventResponse;
+        console.log({ tabId, changeInfo });
+        return (await this.triggerEvent(null, tabId)) as TriggerEventResponse;
       }
     };
 
@@ -91,7 +103,8 @@ class OnPageLoadedTriggerEventService extends TabUpdatedTriggerEventService {
   id = "page_opened" as EventId;
 
   async onEventShouldTrigger(_tabId: number, changeInfo: browser.Tabs.OnUpdatedChangeInfoType): Promise<boolean> {
-    if (changeInfo.status !== "complete") {
+    const currentTabId = await getCurrentTabId();
+    if (changeInfo.status !== "complete" || currentTabId !== _tabId) {
       return false;
     }
     return true;
@@ -102,7 +115,16 @@ class OnButtonClickedTriggerEventService extends MessageTriggerEventService {
   id = "button_clicked" as EventId;
 }
 
+class OnManualTriggerInPopupTriggerEventService extends MessageTriggerEventService {
+  id = "manual_trigger_in_popup" as EventId;
+
+  async onEventShouldTrigger(message: TriggerEventMessage): Promise<boolean> {
+    return message.payload.event.id === this.id;
+  }
+}
+
 export const triggerEventServices: TriggerEventService[] = [
   new OnPageLoadedTriggerEventService(),
   new OnButtonClickedTriggerEventService(),
+  new OnManualTriggerInPopupTriggerEventService(),
 ];

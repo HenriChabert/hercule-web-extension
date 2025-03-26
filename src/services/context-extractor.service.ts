@@ -13,7 +13,10 @@ class UrlExtractor implements ContextExtractorService {
     return tab.url || "";
   };
 
-  async extract(tabId: number): Promise<string> {
+  async extract(tabId: number | null): Promise<string> {
+    if (!tabId) {
+      return "";
+    }
     return this.getCurrentUrl(tabId);
   }
 }
@@ -32,7 +35,11 @@ class HTMLContentExtractor implements ContextExtractorService {
     return element.outerHTML;
   };
 
-  async extract(tabId: number, selector: string | null = null): Promise<string> {
+  async extract(tabId: number | null, selector: string | null = null): Promise<string> {
+    if (!tabId) {
+      return "";
+    }
+
     const urlExtractor = new UrlExtractor();
     const url = await urlExtractor.extract(tabId);
 

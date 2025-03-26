@@ -13,6 +13,7 @@ function Connect() {
   const [serverUrl, setServerUrl] = useState(DEFAULT_SERVER_URL);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
   const { connectStatus, connectConfig } = useConnectStatus();
 
   const isUrlValid = (url: string) => {
@@ -81,7 +82,7 @@ function Connect() {
         }
         break;
     }
-  }, [connectStatus]);
+  }, [connectStatus, connectConfig, navigate]);
 
   return (
     <Flex direction="column" height="600px" width="400px" px="8" py="4" align="center" className="!justify-around">

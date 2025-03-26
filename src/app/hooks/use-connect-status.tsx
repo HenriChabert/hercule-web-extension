@@ -25,16 +25,24 @@ const useConnectStatus = () => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const initConnectState = async () => {
       const status = await getStatus();
 
-      setConnectState({
-        connectStatus: status.payload.status,
-        connectConfig: status.payload.connectConfig,
-        isAuthenticated: status.payload.isAuthenticated
-      });
+      if (mounted) {
+        setConnectState({
+          connectStatus: status.payload.status,
+          connectConfig: status.payload.connectConfig,
+          isAuthenticated: status.payload.isAuthenticated
+        });
+      }
     };
     initConnectState();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return connectState;
